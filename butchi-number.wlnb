@@ -1,0 +1,404 @@
+{
+ "cells": [
+  {
+   "kind": 1,
+   "value": "# butchi number\r\n\r\nfrom butchi-number.nb",
+   "languageId": "markdown",
+   "outputs": [],
+   "metadata": {},
+   "executionSummary": {}
+  },
+  {
+   "kind": 2,
+   "value": "butchiNumber[0] := butchiNumber[{{0}}]\r\nbutchiNumber[x_?NumberQ] := normalize[butchiNumber[{{x}}]]",
+   "languageId": "wolfram",
+   "outputs": [],
+   "metadata": {},
+   "executionSummary": {
+    "timing": {
+     "startTime": 1665486795812,
+     "endTime": 1665486795959
+    },
+    "executionOrder": 332,
+    "success": true
+   }
+  },
+  {
+   "kind": 2,
+   "value": "butchiNumberForm[butchiNumber[li_]] := Grid[Reverse[li, {1, 2}], Dividers -> -1 -> True]",
+   "languageId": "wolfram",
+   "outputs": [],
+   "metadata": {},
+   "executionSummary": {
+    "timing": {
+     "startTime": 1665486795959,
+     "endTime": 1665486796053
+    },
+    "executionOrder": 334,
+    "success": true
+   }
+  },
+  {
+   "kind": 2,
+   "value": "listToPolynomial[li_, var_] := FromDigits[Reverse[li], var]",
+   "languageId": "wolfram",
+   "outputs": [],
+   "metadata": {},
+   "executionSummary": {
+    "timing": {
+     "startTime": 1665486796053,
+     "endTime": 1665486796147
+    },
+    "executionOrder": 335,
+    "success": true
+   }
+  },
+  {
+   "kind": 2,
+   "value": "butchiNumberToList[x_butchiNumber] := First[x]",
+   "languageId": "wolfram",
+   "outputs": [],
+   "metadata": {},
+   "executionSummary": {
+    "timing": {
+     "startTime": 1665486796148,
+     "endTime": 1665486796242
+    },
+    "executionOrder": 336,
+    "success": true
+   }
+  },
+  {
+   "kind": 2,
+   "value": "butchiNumberToPolynomial[x_butchiNumber, var1_, var2_] := \r\n    listToPolynomial[\r\n        Map[listToPolynomial[#, var1] &, butchiNumberToList[x], 1], var2\r\n    ]",
+   "languageId": "wolfram",
+   "outputs": [],
+   "metadata": {},
+   "executionSummary": {
+    "timing": {
+     "startTime": 1665486796242,
+     "endTime": 1665486796335
+    },
+    "executionOrder": 337,
+    "success": true
+   }
+  },
+  {
+   "kind": 2,
+   "value": "normalize[x_butchiNumber, max_: 99999] := \r\n   Module[{p, q}, \r\n      butchiNumber[\r\n         CoefficientList[\r\n            NestWhile[\r\n               Expand[\r\n                  ((# - PolynomialMod[#, 2]) / 2) * (p + q) + PolynomialMod[#, 2]\r\n               ] &,\r\n               butchiNumberToPolynomial[x, p, q],\r\n               UnsameQ,\r\n               2,\r\n               max\r\n            ],\r\n         {q, p}]\r\n      ]\r\n   ]",
+   "languageId": "wolfram",
+   "outputs": [],
+   "metadata": {},
+   "executionSummary": {
+    "timing": {
+     "startTime": 1665486796335,
+     "endTime": 1665486796416
+    },
+    "executionOrder": 338,
+    "success": true
+   }
+  },
+  {
+   "kind": 2,
+   "value": "Clear[increment]",
+   "languageId": "wolfram",
+   "outputs": [],
+   "metadata": {},
+   "executionSummary": {
+    "timing": {
+     "startTime": 1665486796416,
+     "endTime": 1665486796513
+    },
+    "executionOrder": 339,
+    "success": true
+   }
+  },
+  {
+   "kind": 2,
+   "value": "increment[x_butchiNumber] :=\r\n   If[\r\n      Extract[butchiNumberToList[x], {1, 1}] == 0, \r\n      butchiNumber[ReplacePart[butchiNumberToList[x], {1, 1} -> 1]], \r\n      Module[{li, pp = {2, 1}, qq = {1, 2}},\r\n         li = ReplacePart[\r\n            PadRight[#, Dimensions[#] + 1] &[\r\n            butchiNumberToList[x]], {1, 1} -> 0\r\n         ];\r\n         While[\r\n            pp != qq,\r\n            If[li[[Sequence @@ pp]] == 1,\r\n               li[[Sequence @@ pp]] = 0; pp[[1]]++,\r\n               li[[Sequence @@ pp]] = 1; pp[[2]]++\r\n            ];\r\n            If[li[[Sequence @@ qq]] == 1,\r\n               li[[Sequence @@ qq]] = 0; qq[[2]]++,\r\n               li[[Sequence @@ qq]] = 1; qq[[1]]++\r\n            ]\r\n         ];\r\n\r\n         Return[\r\n            butchiNumber[\r\n               Transpose[Transpose[li\r\n               /. {a__, {0 ..}} -> {a}]\r\n               /. {a__, {0 ..}} -> {a}]\r\n            ]\r\n         ]\r\n      ]\r\n   ]",
+   "languageId": "wolfram",
+   "outputs": [],
+   "metadata": {},
+   "executionSummary": {
+    "timing": {
+     "startTime": 1665486796513,
+     "endTime": 1665486796610
+    },
+    "executionOrder": 340,
+    "success": true
+   }
+  },
+  {
+   "kind": 2,
+   "value": "construct[op_, x__butchiNumber] := \r\n    Module[{p, q}, \r\n        normalize[butchiNumber[CoefficientList[\r\n            Apply[\r\n                op, \r\n                Table[butchiNumberToPolynomial[bn, p, q], {bn, {x}}]\r\n            ],\r\n            {q, p}\r\n        ]]]\r\n    ]\r\n\r\nconstruct[op_, x_?NumberQ, y__butchiNumber] := \r\n    Module[{p, q}, \r\n        normalize[butchiNumber[CoefficientList[\r\n            Construct[\r\n                op,\r\n                x, \r\n                Table[butchiNumberToPolynomial[bn, p, q], {bn, {y}}]],\r\n            {q, p}\r\n        ]]]\r\n    ]\r\n\r\nconstruct[op_, x_butchiNumber, y__?NumberQ] := \r\n    Module[{p, q}, \r\n        normalize[butchiNumber[CoefficientList[\r\n            Construct[\r\n                op,\r\n                butchiNumberToPolynomial[x, p, q], y\r\n            ],\r\n            {q, p}\r\n        ]]]\r\n    ]",
+   "languageId": "wolfram",
+   "outputs": [],
+   "metadata": {},
+   "executionSummary": {
+    "timing": {
+     "startTime": 1665486796610,
+     "endTime": 1665486796847
+    },
+    "executionOrder": 341,
+    "success": true
+   }
+  },
+  {
+   "kind": 2,
+   "value": "Unprotect[{Plus, Times, Power}];\r\n\r\n\r\nPlus[x_Integer?Positive, y__butchiNumber] := Nest[increment, y, x]\r\n\r\nPlus[x_?NumberQ, y__butchiNumber] := \r\n    construct[Plus, butchiNumber[{{x}}], y]\r\n\r\nPlus[x_butchiNumber, y__butchiNumber] := construct[Plus, x, y]\r\n\r\n\r\nTimes[x_?NumberQ, y__butchiNumber] := \r\n    construct[Times, butchiNumber[{{x}}], y]\r\n\r\nTimes[x_butchiNumber, y__butchiNumber] := construct[Times, x, y]\r\n\r\n\r\nPower[x_butchiNumber, y_] := construct[Power, x, y]\r\n\r\n\r\nProtect[{Plus, Times, Power}];",
+   "languageId": "wolfram",
+   "outputs": [],
+   "metadata": {},
+   "executionSummary": {
+    "timing": {
+     "startTime": 1665486796847,
+     "endTime": 1665486797471
+    },
+    "executionOrder": 344,
+    "success": true
+   }
+  },
+  {
+   "kind": 2,
+   "value": "butchiNumberPlot[x__butchiNumber] := \r\n    Graphics[Raster[\r\n        Reverse[butchiNumberToList[x], 2]\r\n    ]]\r\n",
+   "languageId": "wolfram",
+   "outputs": [],
+   "metadata": {},
+   "executionSummary": {
+    "timing": {
+     "startTime": 1665486797471,
+     "endTime": 1665486797583
+    },
+    "executionOrder": 352,
+    "success": true
+   }
+  },
+  {
+   "kind": 2,
+   "value": "butchiNumber[{\r\n  {a11, a21},\r\n  {a12, a22}\r\n}] + butchiNumber[{\r\n  {b11, b21},\r\n  {b12, b22}\r\n}] // butchiNumberForm",
+   "languageId": "wolfram",
+   "outputs": [
+    {
+     "items": [
+      {
+       "data": "<div class=\"wexpr\"><wgrid style=\"grid-template-columns:repeat(2,max-content);\"><w><wrow><w></w><w>a22</w><w>+</w><w>b22</w></wrow></w><w><wrow><w></w><w>a12</w><w>+</w><w>b12</w></wrow></w><w><wrow><w></w><w>a21</w><w>+</w><w>b21</w></wrow></w><w><wrow><w></w><w>a11</w><w>+</w><w>b11</w></wrow></w></wgrid></div>",
+       "mime": "x-application/wolfram-language-html"
+      },
+      {
+       "data": "Grid[{{a22 + b22, a12 + b12}, {a21 + b21, a11 + b11}}, Dividers -> -1 -> True]",
+       "mime": "text/plain"
+      }
+     ],
+     "id": "b473baf0-3b56-4e3f-ae0e-3b317d6a10f2",
+     "metadata": {
+      "cellLabel": "Out[353]= ",
+      "isBoxData": false
+     }
+    }
+   ],
+   "metadata": {},
+   "executionSummary": {
+    "timing": {
+     "startTime": 1665486797583,
+     "endTime": 1665486797771
+    },
+    "executionOrder": 353,
+    "success": true
+   }
+  },
+  {
+   "kind": 2,
+   "value": "butchiNumber[{\r\n  {a11, a21},\r\n  {a12, a22}\r\n}] * butchiNumber[{\r\n  {b11, b21},\r\n  {b12, b22}\r\n}] // butchiNumberForm",
+   "languageId": "wolfram",
+   "outputs": [
+    {
+     "items": [
+      {
+       "data": "<div class=\"wexpr\"><wgrid style=\"grid-template-columns:repeat(3,max-content);\"><w><wrow><w></w><w>a22</w><w></w><w>b22</w></wrow></w><w><wrow><w></w><wrow><w></w><w>a22</w><w></w><w>b12</w></wrow><w>+</w><wrow><w></w><w>a12</w><w></w><w>b22</w></wrow></wrow></w><w><wrow><w></w><w>a12</w><w></w><w>b12</w></wrow></w><w><wrow><w></w><wrow><w></w><w>a22</w><w></w><w>b21</w></wrow><w>+</w><wrow><w></w><w>a21</w><w></w><w>b22</w></wrow></wrow></w><w><wrow><w></w><wrow><w></w><w>a22</w><w></w><w>b11</w></wrow><w>+</w><wrow><w></w><w>a21</w><w></w><w>b12</w></wrow><w>+</w><wrow><w></w><w>a12</w><w></w><w>b21</w></wrow><w>+</w><wrow><w></w><w>a11</w><w></w><w>b22</w></wrow></wrow></w><w><wrow><w></w><wrow><w></w><w>a12</w><w></w><w>b11</w></wrow><w>+</w><wrow><w></w><w>a11</w><w></w><w>b12</w></wrow></wrow></w><w><wrow><w></w><w>a21</w><w></w><w>b21</w></wrow></w><w><wrow><w></w><wrow><w></w><w>a21</w><w></w><w>b11</w></wrow><w>+</w><wrow><w></w><w>a11</w><w></w><w>b21</w></wrow></wrow></w><w><wrow><w></w><w>a11</w><w></w><w>b11</w></wrow></w></wgrid></div>",
+       "mime": "x-application/wolfram-language-html"
+      },
+      {
+       "data": "Grid[{{a22*b22, a22*b12 + a12*b22, a12*b12}, {a22*b21 + a21*b22, a22*b11 + a21*b12 + a12*b21 + a11*b22, a12*b11 + a11*b12}, {a21*b21, a21*b11 + a11*b21, a11*b11}}, Dividers -> -1 -> True]",
+       "mime": "text/plain"
+      }
+     ],
+     "id": "fad79bff-f1b8-4682-8b42-5f4963345431",
+     "metadata": {
+      "cellLabel": "Out[354]= ",
+      "isBoxData": false
+     }
+    }
+   ],
+   "metadata": {},
+   "executionSummary": {
+    "timing": {
+     "startTime": 1665486797771,
+     "endTime": 1665486797959
+    },
+    "executionOrder": 354,
+    "success": true
+   }
+  },
+  {
+   "kind": 2,
+   "value": "butchiNumber[{\r\n  {a11, a21},\r\n  {a12, a22}\r\n}]^2 // butchiNumberForm",
+   "languageId": "wolfram",
+   "outputs": [
+    {
+     "items": [
+      {
+       "data": "<div class=\"wexpr\"><wgrid style=\"grid-template-columns:repeat(4,max-content);\"><w><w>0</w></w><w><w>0</w></w><w><wrow><w></w><w>a12</w><w></w><w>a22</w></wrow></w><w><w>0</w></w><w><w>0</w></w><w><wrow><w></w><wrow><w></w><w>a12</w><w></w><w>a22</w></wrow><w>+</w><wrow><w></w><w>a21</w><w></w><w>a22</w></wrow><w>+</w><wsup><w></w><w>a22</w><w><w>2</w></w></wsup></wrow></w><w><wrow><w></w><wrow><w></w><w>a12</w><w></w><w>a21</w></wrow><w>+</w><wrow><w></w><w>a11</w><w></w><w>a22</w></wrow></wrow></w><w><wrow><w></w><wrow><w></w><w>a11</w><w></w><w>a12</w></wrow><w>+</w><wsup><w></w><w>a12</w><w><w>2</w></w></wsup></wrow></w><w><wrow><w></w><w>a21</w><w></w><w>a22</w></wrow></w><w><wrow><w></w><wrow><w></w><w>a12</w><w></w><w>a21</w></wrow><w>+</w><wrow><w></w><w>a11</w><w></w><w>a22</w></wrow></wrow></w><w><wrow><w></w><wrow><w></w><w>a11</w><w></w><w>a12</w></wrow><w>+</w><wrow><w></w><w>a11</w><w></w><w>a21</w></wrow></wrow></w><w><w>0</w></w><w><w>0</w></w><w><wrow><w></w><wrow><w></w><w>a11</w><w></w><w>a21</w></wrow><w>+</w><wsup><w></w><w>a21</w><w><w>2</w></w></wsup></wrow></w><w><w>0</w></w><w><wsup><w></w><w>a11</w><w><w>2</w></w></wsup></w></wgrid></div>",
+       "mime": "x-application/wolfram-language-html"
+      },
+      {
+       "data": "Grid[{{0, 0, a12*a22, 0}, {0, a12*a22 + a21*a22 + a22^2, a12*a21 + a11*a22, a11*a12 + a12^2}, {a21*a22, a12*a21 + a11*a22, a11*a12 + a11*a21, 0}, {0, a11*a21 + a21^2, 0, a11^2}}, Dividers -> -1 -> True]",
+       "mime": "text/plain"
+      }
+     ],
+     "id": "03e19941-98cf-46e0-b6c1-9b6b58f880b5",
+     "metadata": {
+      "cellLabel": "Out[355]= ",
+      "isBoxData": false
+     }
+    }
+   ],
+   "metadata": {},
+   "executionSummary": {
+    "timing": {
+     "startTime": 1665486797959,
+     "endTime": 1665486798148
+    },
+    "executionOrder": 355,
+    "success": true
+   }
+  },
+  {
+   "kind": 2,
+   "value": "butchiNumber[{\r\n  {a11, a21},\r\n  {a12, a22}\r\n}]^3 // butchiNumberForm",
+   "languageId": "wolfram",
+   "outputs": [
+    {
+     "items": [
+      {
+       "data": "<div class=\"wexpr\"><wgrid style=\"grid-template-columns:repeat(5,max-content);\"><w><w>0</w></w><w><wrow><w></w><w>a12</w><w></w><w>a21</w><w></w><w>a22</w></wrow></w><w><wrow><w></w><wrow><w></w><w>a11</w><w></w><w>a12</w><w></w><w>a22</w></wrow><w>+</w><wrow><w></w><w>a12</w><w></w><w>a21</w><w></w><w>a22</w></wrow><w>+</w><wrow><w></w><w>a12</w><w></w><wsup><w></w><w>a22</w><w><w>2</w></w></wsup></wrow></wrow></w><w><wrow><w></w><wrow><w></w><w>a11</w><w></w><w>a12</w><w></w><w>a22</w></wrow><w>+</w><wrow><w></w><wsup><w></w><w>a12</w><w><w>2</w></w></wsup><w></w><w>a22</w></wrow></wrow></w><w><w>0</w></w><w><wrow><w></w><w>a12</w><w></w><w>a21</w><w></w><w>a22</w></wrow></w><w><wrow><w></w><wrow><w></w><w>a11</w><w></w><w>a12</w><w></w><w>a22</w></wrow><w>+</w><wrow><w></w><w>a11</w><w></w><w>a21</w><w></w><w>a22</w></wrow><w>+</w><wrow><w></w><w>a12</w><w></w><wsup><w></w><w>a22</w><w><w>2</w></w></wsup></wrow><w>+</w><wrow><w></w><w>a21</w><w></w><wsup><w></w><w>a22</w><w><w>2</w></w></wsup></wrow><w>+</w><wsup><w></w><w>a22</w><w><w>3</w></w></wsup></wrow></w><w><wrow><w></w><wrow><w></w><w>a11</w><w></w><w>a12</w><w></w><w>a21</w></wrow><w>+</w><wrow><w></w><wsup><w></w><w>a12</w><w><w>2</w></w></wsup><w></w><w>a22</w></wrow><w>+</w><wrow><w></w><w>a11</w><w></w><w>a21</w><w></w><w>a22</w></wrow><w>+</w><wrow><w></w><w>a12</w><w></w><w>a21</w><w></w><w>a22</w></wrow><w>+</w><wrow><w></w><w>a11</w><w></w><wsup><w></w><w>a22</w><w><w>2</w></w></wsup></wrow><w>+</w><wrow><w></w><w>a12</w><w></w><wsup><w></w><w>a22</w><w><w>2</w></w></wsup></wrow></wrow></w><w><wrow><w></w><wrow><w></w><w>a11</w><w></w><w>a12</w><w></w><w>a21</w></wrow><w>+</w><wrow><w></w><wsup><w></w><w>a12</w><w><w>2</w></w></wsup><w></w><w>a21</w></wrow><w>+</w><wrow><w></w><w>a11</w><w></w><w>a12</w><w></w><w>a22</w></wrow><w>+</w><wrow><w></w><wsup><w></w><w>a12</w><w><w>2</w></w></wsup><w></w><w>a22</w></wrow></wrow></w><w><wrow><w></w><wrow><w></w><w>a11</w><w></w><wsup><w></w><w>a12</w><w><w>2</w></w></wsup></wrow><w>+</w><wsup><w></w><w>a12</w><w><w>3</w></w></wsup></wrow></w><w><wrow><w></w><wrow><w></w><w>a11</w><w></w><w>a21</w><w></w><w>a22</w></wrow><w>+</w><wrow><w></w><w>a12</w><w></w><w>a21</w><w></w><w>a22</w></wrow><w>+</w><wrow><w></w><w>a21</w><w></w><wsup><w></w><w>a22</w><w><w>2</w></w></wsup></wrow></wrow></w><w><wrow><w></w><wrow><w></w><w>a11</w><w></w><w>a12</w><w></w><w>a21</w></wrow><w>+</w><wrow><w></w><w>a11</w><w></w><w>a12</w><w></w><w>a22</w></wrow><w>+</w><wrow><w></w><w>a12</w><w></w><w>a21</w><w></w><w>a22</w></wrow><w>+</w><wrow><w></w><wsup><w></w><w>a21</w><w><w>2</w></w></wsup><w></w><w>a22</w></wrow><w>+</w><wrow><w></w><w>a11</w><w></w><wsup><w></w><w>a22</w><w><w>2</w></w></wsup></wrow><w>+</w><wrow><w></w><w>a21</w><w></w><wsup><w></w><w>a22</w><w><w>2</w></w></wsup></wrow></wrow></w><w><wrow><w></w><wrow><w></w><wsup><w></w><w>a12</w><w><w>2</w></w></wsup><w></w><w>a21</w></wrow><w>+</w><wrow><w></w><w>a12</w><w></w><wsup><w></w><w>a21</w><w><w>2</w></w></wsup></wrow><w>+</w><wrow><w></w><w>a11</w><w></w><w>a12</w><w></w><w>a22</w></wrow><w>+</w><wrow><w></w><w>a11</w><w></w><w>a21</w><w></w><w>a22</w></wrow><w>+</w><wrow><w></w><w>a11</w><w></w><wsup><w></w><w>a22</w><w><w>2</w></w></wsup></wrow></wrow></w><w><wrow><w></w><wrow><w></w><w>a11</w><w></w><wsup><w></w><w>a12</w><w><w>2</w></w></wsup></wrow><w>+</w><wrow><w></w><w>a11</w><w></w><w>a12</w><w></w><w>a21</w></wrow><w>+</w><wrow><w></w><wsup><w></w><w>a12</w><w><w>2</w></w></wsup><w></w><w>a21</w></wrow><w>+</w><wrow><w></w><wsup><w></w><w>a11</w><w><w>2</w></w></wsup><w></w><w>a22</w></wrow></wrow></w><w><wrow><w></w><wrow><w></w><wsup><w></w><w>a11</w><w><w>2</w></w></wsup><w></w><w>a12</w></wrow><w>+</w><wrow><w></w><w>a11</w><w></w><wsup><w></w><w>a12</w><w><w>2</w></w></wsup></wrow></wrow></w><w><wrow><w></w><wrow><w></w><w>a11</w><w></w><w>a21</w><w></w><w>a22</w></wrow><w>+</w><wrow><w></w><wsup><w></w><w>a21</w><w><w>2</w></w></wsup><w></w><w>a22</w></wrow></wrow></w><w><wrow><w></w><wrow><w></w><w>a11</w><w></w><w>a12</w><w></w><w>a21</w></wrow><w>+</w><wrow><w></w><w>a12</w><w></w><wsup><w></w><w>a21</w><w><w>2</w></w></wsup></wrow><w>+</w><wrow><w></w><w>a11</w><w></w><w>a21</w><w></w><w>a22</w></wrow><w>+</w><wrow><w></w><wsup><w></w><w>a21</w><w><w>2</w></w></wsup><w></w><w>a22</w></wrow></wrow></w><w><wrow><w></w><wrow><w></w><w>a11</w><w></w><w>a12</w><w></w><w>a21</w></wrow><w>+</w><wrow><w></w><w>a11</w><w></w><wsup><w></w><w>a21</w><w><w>2</w></w></wsup></wrow><w>+</w><wrow><w></w><w>a12</w><w></w><wsup><w></w><w>a21</w><w><w>2</w></w></wsup></wrow><w>+</w><wrow><w></w><wsup><w></w><w>a11</w><w><w>2</w></w></wsup><w></w><w>a22</w></wrow></wrow></w><w><wrow><w></w><wrow><w></w><wsup><w></w><w>a11</w><w><w>2</w></w></wsup><w></w><w>a12</w></wrow><w>+</w><wrow><w></w><wsup><w></w><w>a11</w><w><w>2</w></w></wsup><w></w><w>a21</w></wrow><w>+</w><wrow><w></w><wsup><w></w><w>a11</w><w><w>2</w></w></wsup><w></w><w>a22</w></wrow></wrow></w><w><wrow><w></w><wsup><w></w><w>a11</w><w><w>2</w></w></wsup><w></w><w>a12</w></wrow></w><w><w>0</w></w><w><wrow><w></w><wrow><w></w><w>a11</w><w></w><wsup><w></w><w>a21</w><w><w>2</w></w></wsup></wrow><w>+</w><wsup><w></w><w>a21</w><w><w>3</w></w></wsup></wrow></w><w><wrow><w></w><wrow><w></w><wsup><w></w><w>a11</w><w><w>2</w></w></wsup><w></w><w>a21</w></wrow><w>+</w><wrow><w></w><w>a11</w><w></w><wsup><w></w><w>a21</w><w><w>2</w></w></wsup></wrow></wrow></w><w><wrow><w></w><wsup><w></w><w>a11</w><w><w>2</w></w></wsup><w></w><w>a21</w></wrow></w><w><wsup><w></w><w>a11</w><w><w>3</w></w></wsup></w></wgrid></div>",
+       "mime": "x-application/wolfram-language-html"
+      },
+      {
+       "data": "Grid[{{0, a12*a21*a22, a11*a12*a22 + a12*a21*a22 + a12*a22^2, a11*a12*a22 + a12^2*a22, 0}, {a12*a21*a22, a11*a12*a22 + a11*a21*a22 + a12*a22^2 + a21*a22^2 + a22^3, a11*a12*a21 + a12^2*a22 + a11*a21*a22 + a12*a21*a22 + a11*a22^2 + a12*a22^2, a11*a12*a21 + a12^2*a21 + a11*a12*a22 + a12^2*a22, a11*a12^2 + a12^3}, {a11*a21*a22 + a12*a21*a22 + a21*a22^2, a11*a12*a21 + a11*a12*a22 + a12*a21*a22 + a21^2*a22 + a11*a22^2 + a21*a22^2, a12^2*a21 + a12*a21^2 + a11*a12*a22 + a11*a21*a22 + a11*a22^2, a11*a12^2 + a11*a12*a21 + a12^2*a21 + a11^2*a22, a11^2*a12 + a11*a12^2}, {a11*a21*a22 + a21^2*a22, a11*a12*a21 + a12*a21^2 + a11*a21*a22 + a21^2*a22, a11*a12*a21 + a11*a21^2 + a12*a21^2 + a11^2*a22, a11^2*a12 + a11^2*a21 + a11^2*a22, a11^2*a12}, {0, a11*a21^2 + a21^3, a11^2*a21 + a11*a21^2, a11^2*a21, a11^3}}, Dividers -> -1 -> True]",
+       "mime": "text/plain"
+      }
+     ],
+     "id": "f96b1783-89b0-4e1d-aecc-ecb5200336a9",
+     "metadata": {
+      "cellLabel": "Out[356]= ",
+      "isBoxData": false
+     }
+    }
+   ],
+   "metadata": {},
+   "executionSummary": {
+    "timing": {
+     "startTime": 1665486798149,
+     "endTime": 1665486798354
+    },
+    "executionOrder": 356,
+    "success": true
+   }
+  },
+  {
+   "kind": 2,
+   "value": "(* butchiNumber[{\r\n  {a11, a21, a31},\r\n  {a12, a22, a32},\r\n  {a13, a23, a33}\r\n}]^2 // butchiNumberForm *)",
+   "languageId": "wolfram",
+   "outputs": [],
+   "metadata": {},
+   "executionSummary": {
+    "timing": {
+     "startTime": 1665486811838,
+     "endTime": 1665486815089
+    },
+    "executionOrder": 360,
+    "success": false
+   }
+  },
+  {
+   "kind": 2,
+   "value": "butchiNumberPlot[butchiNumber[16]]",
+   "languageId": "wolfram",
+   "outputs": [
+    {
+     "items": [
+      {
+       "data": "<div class=\"wexpr\"><wgraph class=\"resizable\" style=\"width:480px;height:480px;\" aspect-ratio=\"1.0\" tabIndex=\"-1\"><img src=\"data:image/png;base64,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\n\" /></wgraph></div>",
+       "mime": "x-application/wolfram-language-html"
+      },
+      {
+       "data": "Graphics[Raster[{{0, 1, 0, 0, 0, 0}, {1, 0, 0, 0, 0, 0}, {1, 1, 1, 0, 0, 0}, {1, 1, 0, 1, 0, 0}, {1, 0, 1, 1, 0, 1}, {0, 1, 1, 1, 1, 0}}]]",
+       "mime": "text/plain"
+      }
+     ],
+     "id": "8e1c9e84-3d95-4f01-90ff-c99c339c839c",
+     "metadata": {
+      "cellLabel": "Out[358]= ",
+      "isBoxData": false
+     }
+    }
+   ],
+   "metadata": {},
+   "executionSummary": {
+    "timing": {
+     "startTime": 1665486798448,
+     "endTime": 1665486798683
+    },
+    "executionOrder": 358,
+    "success": true
+   }
+  },
+  {
+   "kind": 2,
+   "value": "butchiNumberPlot[butchiNumber[1024]]",
+   "languageId": "wolfram",
+   "outputs": [
+    {
+     "items": [
+      {
+       "data": "<div class=\"wexpr\"><wgraph class=\"resizable\" style=\"width:480px;height:480px;\" aspect-ratio=\"1.0\" tabIndex=\"-1\"><img src=\"data:image/png;base64,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\n\" /></wgraph></div>",
+       "mime": "x-application/wolfram-language-html"
+      },
+      {
+       "data": "Graphics[Raster[{{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 1, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 1, 0, 0, 0, 1, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 0, 1, 1, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}}]]",
+       "mime": "text/plain"
+      }
+     ],
+     "id": "607e7f67-cb92-4cd3-951f-72e317e55604",
+     "metadata": {
+      "cellLabel": "Out[359]= ",
+      "isBoxData": false
+     }
+    }
+   ],
+   "metadata": {},
+   "executionSummary": {
+    "timing": {
+     "startTime": 1665486798683,
+     "endTime": 1665486799708
+    },
+    "executionOrder": 359,
+    "success": true
+   }
+  },
+  {
+   "kind": 2,
+   "value": "",
+   "languageId": "wolfram",
+   "outputs": [],
+   "metadata": {},
+   "executionSummary": {
+    "timing": {
+     "startTime": 1665486799708,
+     "endTime": 1665486799708
+    },
+    "success": false
+   }
+  }
+ ]
+}
